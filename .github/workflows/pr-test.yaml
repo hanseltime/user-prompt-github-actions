@@ -1,0 +1,37 @@
+name: Test API PR
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      user_confirm:
+        description: 'user confirm'
+        required: true
+        default: false
+        type: boolean
+
+# This will cancel in progress jobs if another job with the same ref gets started.
+# Github run_id is a backup in case github.ref doesn't exist for some reason
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  test_workload:
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        echo "we workloaded"
+  # in reality we would tie this to a slack notification or something
+  fail_for_user_confirm:
+    needs: test_workload
+    runs-on: ubuntu-latest
+    steps:
+    - env:
+        CONFIRMED: ${{ inputs.user_confirm }}
+      run: |
+        if [ "$CONFIRMED" == "false" ]; then echo "Waiting for User input"; exit 2; fi
+  confirmed_work:
+    needs: fail_for_user_confirm
+    runs-on: ubuntu-latest
+    steps:
+    - run: |
+        echo "we did it!"
