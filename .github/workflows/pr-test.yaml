@@ -6,8 +6,11 @@ on:
       user_confirm:
         description: 'user confirm'
         required: true
-        default: false
-        type: boolean
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 # This will cancel in progress jobs if another job with the same ref gets started.
 # Github run_id is a backup in case github.ref doesn't exist for some reason
@@ -22,12 +25,14 @@ jobs:
         echo "we workloaded"
   # in reality we would tie this to a slack notification or something
   fail_for_user_confirm:
+    # Test comment for the pr
     needs: test_workload
     runs-on: ubuntu-latest
     steps:
     - env:
         CONFIRMED: ${{ inputs.user_confirm }}
       run: |
+        echo "$CONFIRMED"
         if [ "$CONFIRMED" == "false" ]; then echo "Waiting for User input"; exit 2; fi
   confirmed_work:
     needs: fail_for_user_confirm
